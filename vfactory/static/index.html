@@ -385,32 +385,49 @@
                         </marker>
                       </defs>
 
-                      <rect class="node device-node" x="30" y="140" width="150" height="80" rx="14"></rect>
-                      <text class="node-title" x="105" y="172" text-anchor="middle">Device Fleet</text>
-                      <text class="node-sub" x="105" y="194" text-anchor="middle">Sensors + LWT</text>
+                      <g class="diagram-node">
+                        <title>Device fleet publishes telemetry (QoS 0), alarms (QoS 1), and retained state/status. LWT flips status offline on unexpected disconnect.</title>
+                        <rect class="node device-node" x="30" y="140" width="150" height="80" rx="14"></rect>
+                        <text class="node-title" x="105" y="172" text-anchor="middle">Device Fleet</text>
+                        <text class="node-sub" x="105" y="194" text-anchor="middle">Sensors + LWT</text>
+                      </g>
 
-                      <rect class="node broker-node" x="245" y="125" width="150" height="110" rx="16"></rect>
-                      <text class="node-title" x="320" y="165" text-anchor="middle">MQTT Broker</text>
-                      <rect class="cache-node" x="272" y="184" width="96" height="26" rx="10"></rect>
-                      <text class="node-sub cache-label" x="320" y="202" text-anchor="middle">retained</text>
+                      <g class="diagram-node">
+                        <title>Broker routes messages by topic, enforces QoS, and stores retained state for late subscribers.</title>
+                        <rect class="node broker-node" x="245" y="125" width="150" height="110" rx="16"></rect>
+                        <text class="node-title" x="320" y="165" text-anchor="middle">MQTT Broker</text>
+                        <rect class="cache-node" x="272" y="184" width="96" height="26" rx="10"></rect>
+                        <text class="node-sub cache-label" x="320" y="202" text-anchor="middle">retained</text>
+                      </g>
 
-                      <rect class="node dashboard-node" x="520" y="40" width="160" height="70" rx="14"></rect>
-                      <text class="node-title" x="600" y="72" text-anchor="middle">Dashboard</text>
-                      <text class="node-sub" x="600" y="92" text-anchor="middle">WebSocket feed</text>
+                      <g class="diagram-node">
+                        <title>Dashboard subscribes to telemetry, alarms, state, and status. It publishes operator commands to devices.</title>
+                        <rect class="node dashboard-node" x="520" y="40" width="160" height="70" rx="14"></rect>
+                        <text class="node-title" x="600" y="72" text-anchor="middle">Dashboard</text>
+                        <text class="node-sub" x="600" y="92" text-anchor="middle">WebSocket feed</text>
+                      </g>
 
-                      <rect class="node controller-node" x="520" y="250" width="160" height="70" rx="14"></rect>
-                      <text class="node-title" x="600" y="282" text-anchor="middle">Controller</text>
-                      <text class="node-sub" x="600" y="302" text-anchor="middle">Rules + actions</text>
+                      <g class="diagram-node">
+                        <title>Controller subscribes to telemetry/alarms/status/state and publishes commands based on rules.</title>
+                        <rect class="node controller-node" x="520" y="250" width="160" height="70" rx="14"></rect>
+                        <text class="node-title" x="600" y="282" text-anchor="middle">Controller</text>
+                        <text class="node-sub" x="600" y="302" text-anchor="middle">Rules + actions</text>
+                      </g>
 
-                      <rect class="node observer-node" x="70" y="260" width="150" height="70" rx="14"></rect>
-                      <text class="node-title" x="145" y="292" text-anchor="middle">Observer</text>
-                      <text class="node-sub" x="145" y="312" text-anchor="middle">CLI / test sub</text>
+                      <g class="diagram-node">
+                        <title>Observer subscribes to wildcard topics for inspection and testing.</title>
+                        <rect class="node observer-node" x="70" y="260" width="150" height="70" rx="14"></rect>
+                        <text class="node-title" x="145" y="292" text-anchor="middle">Observer</text>
+                        <text class="node-sub" x="145" y="312" text-anchor="middle">CLI / test sub</text>
+                      </g>
 
                       <path class="flow-path telemetry" d="M180 165 L237 165" marker-end="url(#arrow-telemetry)"></path>
                       <path class="flow-path alarms" d="M180 200 L237 200" marker-end="url(#arrow-alarms)"></path>
+                      <path class="flow-path commands" d="M245 182 L186 182" marker-end="url(#arrow-commands)"></path>
                       <path class="flow-path stream" d="M395 160 L450 160 L450 75 L512 75" marker-end="url(#arrow-stream)"></path>
                       <path class="flow-path stream" d="M395 210 L450 210 L450 285 L512 285" marker-end="url(#arrow-stream)"></path>
                       <path class="flow-path commands" d="M520 95 L470 95 L470 125 L403 125" marker-end="url(#arrow-commands)"></path>
+                      <path class="flow-path commands" d="M520 285 L470 285 L470 235 L403 235" marker-end="url(#arrow-commands)"></path>
                       <path class="flow-path retained" d="M270 235 L270 295 L220 295" marker-end="url(#arrow-retained)"></path>
 
                       <circle class="flow-pulse telemetry" r="4">
@@ -418,6 +435,9 @@
                       </circle>
                       <circle class="flow-pulse alarms" r="4">
                         <animateMotion dur="3.4s" repeatCount="indefinite" path="M180 200 L237 200" begin="0.6s"></animateMotion>
+                      </circle>
+                      <circle class="flow-pulse commands" r="4">
+                        <animateMotion dur="3.2s" repeatCount="indefinite" path="M245 182 L186 182" begin="0.2s"></animateMotion>
                       </circle>
                       <circle class="flow-pulse stream" r="4">
                         <animateMotion dur="4.2s" repeatCount="indefinite" path="M395 160 L450 160 L450 75 L512 75" begin="1s"></animateMotion>
@@ -427,6 +447,9 @@
                       </circle>
                       <circle class="flow-pulse commands" r="4">
                         <animateMotion dur="3s" repeatCount="indefinite" path="M520 95 L470 95 L470 125 L403 125" begin="0.4s"></animateMotion>
+                      </circle>
+                      <circle class="flow-pulse commands" r="4">
+                        <animateMotion dur="3.4s" repeatCount="indefinite" path="M520 285 L470 285 L470 235 L403 235" begin="0.9s"></animateMotion>
                       </circle>
                       <circle class="flow-pulse retained" r="4">
                         <animateMotion dur="4.8s" repeatCount="indefinite" path="M270 235 L270 295 L220 295" begin="2s"></animateMotion>
