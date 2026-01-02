@@ -214,20 +214,61 @@ function setupCopyButtons() {
   });
 }
 
+function setTabState(tabs, panels, activeTab, tabAttr, panelAttr) {
+  const key = activeTab.getAttribute(tabAttr);
+  tabs.forEach((tab) => {
+    const active = tab === activeTab;
+    tab.classList.toggle("active", active);
+    tab.setAttribute("aria-selected", active ? "true" : "false");
+    tab.setAttribute("tabindex", active ? "0" : "-1");
+  });
+  panels.forEach((panel) => {
+    const active = panel.getAttribute(panelAttr) === key;
+    panel.classList.toggle("active", active);
+    panel.setAttribute("aria-hidden", active ? "false" : "true");
+    panel.hidden = !active;
+  });
+}
+
+function handleTabKeydown(event, tabs, panels, tabAttr, panelAttr) {
+  const keys = ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"];
+  if (!keys.includes(event.key)) {
+    return;
+  }
+  event.preventDefault();
+  const currentIndex = tabs.indexOf(event.currentTarget);
+  if (currentIndex === -1) {
+    return;
+  }
+  let nextIndex = currentIndex;
+  if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+    nextIndex = (currentIndex + 1) % tabs.length;
+  } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+    nextIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+  } else if (event.key === "Home") {
+    nextIndex = 0;
+  } else if (event.key === "End") {
+    nextIndex = tabs.length - 1;
+  }
+  const nextTab = tabs[nextIndex];
+  setTabState(tabs, panels, nextTab, tabAttr, panelAttr);
+  nextTab.focus();
+}
+
 function setupTabs() {
-  const tabs = document.querySelectorAll(".tab");
-  const panels = document.querySelectorAll(".tab-panel");
+  const tabs = Array.from(document.querySelectorAll(".tab"));
+  const panels = Array.from(document.querySelectorAll(".tab-panel"));
+  if (tabs.length === 0) {
+    return;
+  }
+  const activeTab = tabs.find((tab) => tab.classList.contains("active")) || tabs[0];
+  setTabState(tabs, panels, activeTab, "data-tab", "data-panel");
   tabs.forEach((tab) => {
     tab.addEventListener("click", () => {
-      const target = tab.getAttribute("data-tab");
-      tabs.forEach((btn) => {
-        const active = btn === tab;
-        btn.classList.toggle("active", active);
-        btn.setAttribute("aria-selected", active ? "true" : "false");
-      });
-      panels.forEach((panel) => {
-        panel.classList.toggle("active", panel.getAttribute("data-panel") === target);
-      });
+      setTabState(tabs, panels, tab, "data-tab", "data-panel");
+    });
+    tab.addEventListener("keydown", (event) => {
+      handleTabKeydown(event, tabs, panels, "data-tab", "data-panel");
     });
   });
 }
@@ -242,22 +283,116 @@ function setupSubTabs() {
     if (!panelsContainer) {
       return;
     }
-    const tabs = groupEl.querySelectorAll(".subtab");
-    const panels = panelsContainer.querySelectorAll(".subtab-panel");
+    const tabs = Array.from(groupEl.querySelectorAll(".subtab"));
+    const panels = Array.from(panelsContainer.querySelectorAll(".subtab-panel"));
+    if (tabs.length === 0) {
+      return;
+    }
+    const activeTab = tabs.find((tab) => tab.classList.contains("active")) || tabs[0];
+    setTabState(tabs, panels, activeTab, "data-subtab", "data-subpanel");
     tabs.forEach((tab) => {
       tab.addEventListener("click", () => {
-        const target = tab.getAttribute("data-subtab");
-        tabs.forEach((btn) => {
-          const active = btn === tab;
-          btn.classList.toggle("active", active);
-          btn.setAttribute("aria-selected", active ? "true" : "false");
-        });
-        panels.forEach((panel) => {
-          panel.classList.toggle("active", panel.getAttribute("data-subpanel") === target);
-        });
+        setTabState(tabs, panels, tab, "data-subtab", "data-subpanel");
+      });
+      tab.addEventListener("keydown", (event) => {
+        handleTabKeydown(event, tabs, panels, "data-subtab", "data-subpanel");
       });
     });
   });
+}
+
+function setupDiagramTooltips() {
+  const visual = document.querySelector(".mqtt-visual");
+  const tooltip = document.getElementById("diagram-tooltip");
+  if (!visual || !tooltip) {
+    return;
+  }
+  const nodes = Array.from(visual.querySelectorAll(".diagram-node[data-tooltip]"));
+  if (nodes.length === 0) {
+    return;
+  }
+  let activeNode = null;
+
+  const positionTooltip = (node) => {
+    const containerRect = visual.getBoundingClientRect();
+    const nodeRect = node.getBoundingClientRect();
+    const tooltipRect = tooltip.getBoundingClientRect();
+    let left = nodeRect.right - containerRect.left + 12;
+    let top = nodeRect.top - containerRect.top;
+    if (left + tooltipRect.width > containerRect.width - 8) {
+      left = nodeRect.left - containerRect.left - tooltipRect.width - 12;
+    }
+    if (left < 8) {
+      left = 8;
+    }
+    if (top + tooltipRect.height > containerRect.height - 8) {
+      top = containerRect.height - tooltipRect.height - 8;
+    }
+    if (top < 8) {
+      top = 8;
+    }
+    tooltip.style.left = `${left}px`;
+    tooltip.style.top = `${top}px`;
+  };
+
+  const showTooltip = (node) => {
+    const text = node.getAttribute("data-tooltip");
+    if (!text) {
+      return;
+    }
+    tooltip.textContent = text;
+    tooltip.classList.add("active");
+    tooltip.setAttribute("aria-hidden", "false");
+    positionTooltip(node);
+    activeNode = node;
+  };
+
+  const hideTooltip = () => {
+    tooltip.classList.remove("active");
+    tooltip.setAttribute("aria-hidden", "true");
+    activeNode = null;
+  };
+
+  nodes.forEach((node) => {
+    node.addEventListener("pointerenter", () => showTooltip(node));
+    node.addEventListener("pointerleave", hideTooltip);
+    node.addEventListener("focus", () => showTooltip(node));
+    node.addEventListener("blur", hideTooltip);
+    node.addEventListener("pointerdown", (event) => {
+      if (event.pointerType === "touch") {
+        event.preventDefault();
+        showTooltip(node);
+      }
+    });
+    node.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        hideTooltip();
+        node.blur();
+      }
+    });
+  });
+
+  document.addEventListener("pointerdown", (event) => {
+    if (activeNode && !visual.contains(event.target)) {
+      hideTooltip();
+    }
+  });
+
+  window.addEventListener("resize", () => {
+    if (activeNode) {
+      positionTooltip(activeNode);
+    }
+  });
+
+  window.addEventListener(
+    "scroll",
+    () => {
+      if (activeNode) {
+        positionTooltip(activeNode);
+      }
+    },
+    true
+  );
 }
 
 function renderDeviceOptions() {
@@ -414,3 +549,4 @@ setupFilters();
 setupCopyButtons();
 setupTabs();
 setupSubTabs();
+setupDiagramTooltips();

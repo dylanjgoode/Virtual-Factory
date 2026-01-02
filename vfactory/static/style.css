@@ -501,6 +501,37 @@ code {
   cursor: help;
 }
 
+.mqtt-diagram .diagram-node:focus .node,
+.mqtt-diagram .diagram-node:focus-visible .node {
+  stroke: var(--accent-2);
+  stroke-width: 2;
+}
+
+.diagram-tooltip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  max-width: 240px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: #0b1016;
+  border: 1px solid var(--card-border);
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.4;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+  z-index: 5;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.45);
+}
+
+.diagram-tooltip.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .flow-path {
   fill: none;
   stroke-width: 3;

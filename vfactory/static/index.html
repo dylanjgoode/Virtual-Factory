@@ -22,12 +22,12 @@
 
     <main>
       <div class="tabs" role="tablist" aria-label="Project sections">
-        <button class="tab active" role="tab" aria-selected="true" data-tab="dashboard">Dashboard</button>
-        <button class="tab" role="tab" aria-selected="false" data-tab="guide">Guide</button>
+        <button class="tab active" role="tab" id="tab-dashboard" aria-selected="true" aria-controls="panel-dashboard" tabindex="0" data-tab="dashboard">Dashboard</button>
+        <button class="tab" role="tab" id="tab-guide" aria-selected="false" aria-controls="panel-guide" tabindex="-1" data-tab="guide">Guide</button>
       </div>
 
       <div class="tab-panels">
-        <div class="tab-panel active" data-panel="dashboard">
+        <div class="tab-panel active" role="tabpanel" id="panel-dashboard" aria-labelledby="tab-dashboard" data-panel="dashboard">
           <section class="panel summary">
             <div>
               <div class="section-title">
@@ -183,14 +183,14 @@
           </section>
         </div>
 
-        <div class="tab-panel" data-panel="guide">
+        <div class="tab-panel" role="tabpanel" id="panel-guide" aria-labelledby="tab-guide" data-panel="guide">
           <div class="subtabs" role="tablist" aria-label="Guide sections" data-tab-group="guide">
-            <button class="subtab active" role="tab" aria-selected="true" data-subtab="guide-basics">Quickstart</button>
-            <button class="subtab" role="tab" aria-selected="false" data-subtab="guide-mqtt">MQTT Flow</button>
+            <button class="subtab active" role="tab" id="subtab-guide-basics" aria-selected="true" aria-controls="panel-guide-basics" tabindex="0" data-subtab="guide-basics">Quickstart</button>
+            <button class="subtab" role="tab" id="subtab-guide-mqtt" aria-selected="false" aria-controls="panel-guide-mqtt" tabindex="-1" data-subtab="guide-mqtt">MQTT Flow</button>
           </div>
 
           <div class="subtab-panels" data-tab-group="guide">
-            <div class="subtab-panel active" role="tabpanel" data-subpanel="guide-basics">
+            <div class="subtab-panel active" role="tabpanel" id="panel-guide-basics" aria-labelledby="subtab-guide-basics" data-subpanel="guide-basics">
               <section class="panel">
                 <h2>Requirements & Setup</h2>
                 <p>The MQTT broker runs in a Docker container. Start it with the scripts below.</p>
@@ -308,7 +308,7 @@
               </section>
             </div>
 
-            <div class="subtab-panel" role="tabpanel" data-subpanel="guide-mqtt">
+            <div class="subtab-panel" role="tabpanel" id="panel-guide-mqtt" aria-labelledby="subtab-guide-mqtt" data-subpanel="guide-mqtt">
               <section class="panel mqtt-explainer">
                 <div class="panel-header">
                   <div>
@@ -332,7 +332,7 @@
                     </div>
                     <div class="note-card">
                       <div class="note-title">Commands</div>
-                      <p class="note-text">Dashboard + controller publish commands (QoS 1) to <code>commands/{sender}/{device}</code>, and devices respond on state/status.</p>
+                      <p class="note-text">Dashboard + controller publish commands (QoS 1) to <code>commands/{sender}/{device}</code>; the broker delivers them to devices, which answer on state/status.</p>
                     </div>
                     <div class="legend">
                       <div class="legend-item telemetry" style="--pulse-delay: 0s;">
@@ -385,37 +385,32 @@
                         </marker>
                       </defs>
 
-                      <g class="diagram-node">
-                        <title>Device fleet publishes telemetry (QoS 0), alarms (QoS 1), and retained state/status. LWT flips status offline on unexpected disconnect.</title>
+                      <g class="diagram-node" tabindex="0" focusable="true" aria-label="Device fleet publishes telemetry (QoS 0), alarms (QoS 1), and retained state/status. LWT flips status offline on unexpected disconnect." data-tooltip="Device fleet publishes telemetry (QoS 0), alarms (QoS 1), and retained state/status. LWT flips status offline on unexpected disconnect.">
                         <rect class="node device-node" x="30" y="140" width="150" height="80" rx="14"></rect>
                         <text class="node-title" x="105" y="172" text-anchor="middle">Device Fleet</text>
                         <text class="node-sub" x="105" y="194" text-anchor="middle">Sensors + LWT</text>
                       </g>
 
-                      <g class="diagram-node">
-                        <title>Broker routes messages by topic, enforces QoS, and stores retained state for late subscribers.</title>
+                      <g class="diagram-node" tabindex="0" focusable="true" aria-label="Broker routes messages by topic, enforces QoS, and stores retained state for late subscribers." data-tooltip="Broker routes messages by topic, enforces QoS, and stores retained state for late subscribers.">
                         <rect class="node broker-node" x="245" y="125" width="150" height="110" rx="16"></rect>
                         <text class="node-title" x="320" y="165" text-anchor="middle">MQTT Broker</text>
                         <rect class="cache-node" x="272" y="184" width="96" height="26" rx="10"></rect>
                         <text class="node-sub cache-label" x="320" y="202" text-anchor="middle">retained</text>
                       </g>
 
-                      <g class="diagram-node">
-                        <title>Dashboard subscribes to telemetry, alarms, state, and status. It publishes operator commands to devices.</title>
+                      <g class="diagram-node" tabindex="0" focusable="true" aria-label="Dashboard subscribes to telemetry, alarms, state, and status. It publishes operator commands to devices." data-tooltip="Dashboard subscribes to telemetry, alarms, state, and status. It publishes operator commands to devices.">
                         <rect class="node dashboard-node" x="520" y="40" width="160" height="70" rx="14"></rect>
                         <text class="node-title" x="600" y="72" text-anchor="middle">Dashboard</text>
                         <text class="node-sub" x="600" y="92" text-anchor="middle">WebSocket feed</text>
                       </g>
 
-                      <g class="diagram-node">
-                        <title>Controller subscribes to telemetry/alarms/status/state and publishes commands based on rules.</title>
+                      <g class="diagram-node" tabindex="0" focusable="true" aria-label="Controller subscribes to telemetry/alarms/status/state and publishes commands based on rules." data-tooltip="Controller subscribes to telemetry/alarms/status/state and publishes commands based on rules.">
                         <rect class="node controller-node" x="520" y="250" width="160" height="70" rx="14"></rect>
                         <text class="node-title" x="600" y="282" text-anchor="middle">Controller</text>
                         <text class="node-sub" x="600" y="302" text-anchor="middle">Rules + actions</text>
                       </g>
 
-                      <g class="diagram-node">
-                        <title>Observer subscribes to wildcard topics for inspection and testing.</title>
+                      <g class="diagram-node" tabindex="0" focusable="true" aria-label="Observer subscribes to wildcard topics for inspection and testing." data-tooltip="Observer subscribes to wildcard topics for inspection and testing.">
                         <rect class="node observer-node" x="70" y="260" width="150" height="70" rx="14"></rect>
                         <text class="node-title" x="145" y="292" text-anchor="middle">Observer</text>
                         <text class="node-sub" x="145" y="312" text-anchor="middle">CLI / test sub</text>
@@ -455,6 +450,7 @@
                         <animateMotion dur="4.8s" repeatCount="indefinite" path="M270 235 L270 295 L220 295" begin="2s"></animateMotion>
                       </circle>
                     </svg>
+                    <div class="diagram-tooltip" id="diagram-tooltip" role="tooltip" aria-hidden="true"></div>
                     <p class="diagram-caption">Animated pulses show how messages move through the broker, while retained state stays cached until a new subscriber appears.</p>
                   </div>
                 </div>
