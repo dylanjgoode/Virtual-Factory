@@ -31,11 +31,33 @@ Then open the dashboard:
 http://localhost:8080
 ```
 
+Broker port is mapped to `1884` to avoid conflicts with any local MQTT services.
+Clients default to `VF_BROKER_PORT=1884` and can override with environment variables.
+
 To stop everything:
 
 ```bash
 ./scripts/stop.sh
 ```
+
+If you need a hard stop for any background processes:
+
+```bash
+pkill -f "vfactory."
+./scripts/stop.sh
+```
+
+Run in the background:
+
+```bash
+nohup ./scripts/start.sh > vfactory-run.log 2>&1 &
+```
+
+## Dashboard Screenshot
+
+Devices, command center, and live traffic view:
+
+![Virtual Factory dashboard screenshot](assets/readme-dashboard.png)
 
 ## Topic Structure
 

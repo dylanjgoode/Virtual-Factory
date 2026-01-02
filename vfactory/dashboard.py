@@ -6,7 +6,18 @@ from collections import deque
 
 from aiohttp import web
 
-from vfactory.common import QOS_COMMAND, connect, create_client, json_dumps, log, now_ts, topic
+from vfactory.common import (
+    BASE_TOPIC,
+    BROKER_HOST,
+    BROKER_PORT,
+    QOS_COMMAND,
+    connect,
+    create_client,
+    json_dumps,
+    log,
+    now_ts,
+    topic,
+)
 
 
 STATIC_DIR = pathlib.Path(__file__).parent / "static"
@@ -19,6 +30,12 @@ class DashboardState:
         self.traffic = deque(maxlen=200)
         self.websockets: set[web.WebSocketResponse] = set()
         self.mqtt = None
+        self.meta = {
+            "base_topic": BASE_TOPIC,
+            "broker_host": BROKER_HOST,
+            "broker_port": BROKER_PORT,
+        }
+        self.broker_status = "disconnected"
 
     def update_device(self, device_id: str) -> dict:
         device = self.devices.get(device_id)
@@ -43,6 +60,8 @@ class DashboardState:
             "type": "snapshot",
             "devices": self.devices,
             "traffic": list(self.traffic),
+            "meta": self.meta,
+            "broker_status": self.broker_status,
         }
 
     async def broadcast(self, payload: dict) -> None:
@@ -107,6 +126,7 @@ def start_mqtt(state: DashboardState) -> None:
         if rc == 0:
             log("dashboard", "connected")
             client.subscribe(topic("#"), qos=1)
+            state.broker_status = "connected"
             asyncio.run_coroutine_threadsafe(
                 state.broadcast({"type": "broker", "status": "connected"}), state.loop
             )
@@ -158,6 +178,7 @@ def start_mqtt(state: DashboardState) -> None:
     def on_disconnect(_client, _userdata, rc):
         if rc != 0:
             log("dashboard", f"disconnected rc={rc}")
+        state.broker_status = "disconnected"
         asyncio.run_coroutine_threadsafe(
             state.broadcast({"type": "broker", "status": "disconnected"}), state.loop
         )

@@ -1,6 +1,22 @@
 const state = {
   devices: {},
   traffic: [],
+  meta: {},
+  brokerStatus: "disconnected",
+  concepts: {
+    qos0: false,
+    qos1: false,
+    retained: false,
+    lwt: false,
+    commands: false,
+    alarms: false,
+  },
+  filters: {
+    category: "all",
+    qos: "any",
+    retain: "any",
+    text: "",
+  },
 };
 
 const devicesEl = document.getElementById("devices");
@@ -10,9 +26,29 @@ const onlineDevicesEl = document.getElementById("online-devices");
 const trafficCountEl = document.getElementById("traffic-count");
 const commandDeviceEl = document.getElementById("command-device");
 const brokerStatusEl = document.getElementById("broker-status");
+const conceptsEl = document.getElementById("concepts");
+const brokerMetaEl = document.getElementById("broker-meta");
+const guideMetaEl = document.querySelector(".guide-meta");
+const filterCategoryEl = document.getElementById("filter-category");
+const filterQosEl = document.getElementById("filter-qos");
+const filterRetainEl = document.getElementById("filter-retain");
+const filterTextEl = document.getElementById("filter-text");
+
+function replaceTemplate(text) {
+  return text
+    .replaceAll("{base_topic}", state.meta.base_topic || "factory")
+    .replaceAll("{broker_port}", state.meta.broker_port || "1883");
+}
+
+function brokerSuffix() {
+  if (!state.meta.broker_host || !state.meta.broker_port) {
+    return "";
+  }
+  return ` (${state.meta.broker_host}:${state.meta.broker_port})`;
+}
 
 function setBrokerStatus(text, online) {
-  brokerStatusEl.querySelector("span:last-child").textContent = `Broker: ${text}`;
+  brokerStatusEl.querySelector("span:last-child").textContent = `Broker: ${text}${brokerSuffix()}`;
   const dot = brokerStatusEl.querySelector(".dot");
   dot.style.background = online ? "#58c7c1" : "#ffb347";
   dot.style.boxShadow = online ? "0 0 10px rgba(88, 199, 193, 0.8)" : "0 0 8px rgba(255, 179, 71, 0.8)";
@@ -23,6 +59,205 @@ function updateStats() {
   totalDevicesEl.textContent = devices.length;
   onlineDevicesEl.textContent = devices.filter((d) => d.status === "online").length;
   trafficCountEl.textContent = state.traffic.length;
+}
+
+function topicCategory(topic) {
+  const parts = topic.split("/");
+  if (state.meta.base_topic && parts[0] === state.meta.base_topic) {
+    return parts[1] || "";
+  }
+  return parts[0] || "";
+}
+
+function renderConcepts() {
+  if (!conceptsEl) {
+    return;
+  }
+  conceptsEl.querySelectorAll("[data-concept]").forEach((el) => {
+    const key = el.getAttribute("data-concept");
+    if (state.concepts[key]) {
+      el.classList.add("active");
+    } else {
+      el.classList.remove("active");
+    }
+  });
+}
+
+function renderMeta() {
+  if (!brokerMetaEl) {
+    return;
+  }
+  const base = state.meta.base_topic || "--";
+  const host = state.meta.broker_host || "--";
+  const port = state.meta.broker_port || "--";
+  brokerMetaEl.textContent = `Base topic: ${base} | Broker: ${host}:${port}`;
+}
+
+function renderGuideMeta() {
+  if (!guideMetaEl) {
+    return;
+  }
+  const template = guideMetaEl.getAttribute("data-template") || guideMetaEl.textContent;
+  guideMetaEl.textContent = replaceTemplate(template);
+}
+
+function updateConcepts(entry) {
+  if (entry.qos === 0) {
+    state.concepts.qos0 = true;
+  }
+  if (entry.qos === 1) {
+    state.concepts.qos1 = true;
+  }
+  if (entry.retain) {
+    state.concepts.retained = true;
+  }
+  const category = topicCategory(entry.topic);
+  if (category === "status") {
+    state.concepts.lwt = true;
+  }
+  if (category === "commands") {
+    state.concepts.commands = true;
+  }
+  if (category === "alarms") {
+    state.concepts.alarms = true;
+  }
+}
+
+function renderExercises() {
+  document.querySelectorAll(".exercise-code[data-template]").forEach((codeEl) => {
+    const template = codeEl.getAttribute("data-template");
+    const command = replaceTemplate(template);
+    codeEl.textContent = command;
+    const button = codeEl.parentElement?.parentElement?.querySelector("[data-copy]");
+    if (button) {
+      button.setAttribute("data-copy", command);
+    }
+  });
+}
+
+function renderTooltips() {
+  document.querySelectorAll("[data-tooltip]").forEach((el) => {
+    const template = el.getAttribute("data-tooltip");
+    if (!template) {
+      return;
+    }
+    el.setAttribute("data-tooltip", replaceTemplate(template));
+  });
+}
+
+function applyFilters(entries) {
+  const text = state.filters.text.toLowerCase();
+  return entries.filter((entry) => {
+    if (state.filters.category !== "all") {
+      const category = topicCategory(entry.topic);
+      if (category !== state.filters.category) {
+        return false;
+      }
+    }
+    if (state.filters.qos !== "any" && String(entry.qos) !== state.filters.qos) {
+      return false;
+    }
+    if (state.filters.retain !== "any") {
+      const wantRetained = state.filters.retain === "retained";
+      if (Boolean(entry.retain) !== wantRetained) {
+        return false;
+      }
+    }
+    if (text && !entry.topic.toLowerCase().includes(text) && !entry.payload.toLowerCase().includes(text)) {
+      return false;
+    }
+    return true;
+  });
+}
+
+function setupFilters() {
+  if (!filterCategoryEl) {
+    return;
+  }
+  const update = () => {
+    state.filters.category = filterCategoryEl.value;
+    state.filters.qos = filterQosEl.value;
+    state.filters.retain = filterRetainEl.value;
+    state.filters.text = filterTextEl.value.trim();
+    renderTraffic();
+  };
+  filterCategoryEl.addEventListener("change", update);
+  filterQosEl.addEventListener("change", update);
+  filterRetainEl.addEventListener("change", update);
+  filterTextEl.addEventListener("input", update);
+}
+
+function setupCopyButtons() {
+  document.querySelectorAll("[data-copy]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const text = button.getAttribute("data-copy");
+      if (!text) {
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch (error) {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
+      button.classList.add("copied");
+      button.textContent = "Copied";
+      setTimeout(() => {
+        button.classList.remove("copied");
+        button.textContent = "Copy";
+      }, 1600);
+    });
+  });
+}
+
+function setupTabs() {
+  const tabs = document.querySelectorAll(".tab");
+  const panels = document.querySelectorAll(".tab-panel");
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      const target = tab.getAttribute("data-tab");
+      tabs.forEach((btn) => {
+        const active = btn === tab;
+        btn.classList.toggle("active", active);
+        btn.setAttribute("aria-selected", active ? "true" : "false");
+      });
+      panels.forEach((panel) => {
+        panel.classList.toggle("active", panel.getAttribute("data-panel") === target);
+      });
+    });
+  });
+}
+
+function setupSubTabs() {
+  document.querySelectorAll(".subtabs").forEach((groupEl) => {
+    const groupName = groupEl.getAttribute("data-tab-group");
+    if (!groupName) {
+      return;
+    }
+    const panelsContainer = document.querySelector(`.subtab-panels[data-tab-group="${groupName}"]`);
+    if (!panelsContainer) {
+      return;
+    }
+    const tabs = groupEl.querySelectorAll(".subtab");
+    const panels = panelsContainer.querySelectorAll(".subtab-panel");
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        const target = tab.getAttribute("data-subtab");
+        tabs.forEach((btn) => {
+          const active = btn === tab;
+          btn.classList.toggle("active", active);
+          btn.setAttribute("aria-selected", active ? "true" : "false");
+        });
+        panels.forEach((panel) => {
+          panel.classList.toggle("active", panel.getAttribute("data-subpanel") === target);
+        });
+      });
+    });
+  });
 }
 
 function renderDeviceOptions() {
@@ -82,12 +317,13 @@ function renderDevices() {
 
 function renderTraffic() {
   trafficEl.innerHTML = "";
-  const entries = state.traffic.slice(-60).reverse();
+  const entries = applyFilters(state.traffic).slice(-60).reverse();
   entries.forEach((entry) => {
     const row = document.createElement("div");
     row.className = "traffic-entry";
     const payloadPreview = entry.payload.length > 140 ? `${entry.payload.slice(0, 140)}...` : entry.payload;
-    row.innerHTML = `<div><span class="topic">${entry.topic}</span> qos=${entry.qos} retain=${entry.retain}</div><div>${payloadPreview}</div>`;
+    const category = topicCategory(entry.topic);
+    row.innerHTML = `<div><span class="topic">${entry.topic}</span> <span class="meta-chip">${category}</span> qos=${entry.qos} retain=${entry.retain}</div><div>${payloadPreview}</div>`;
     trafficEl.appendChild(row);
   });
 }
@@ -95,10 +331,27 @@ function renderTraffic() {
 function applySnapshot(snapshot) {
   state.devices = snapshot.devices || {};
   state.traffic = snapshot.traffic || [];
+  state.meta = snapshot.meta || {};
+  state.brokerStatus = snapshot.broker_status || "disconnected";
+  state.concepts = {
+    qos0: false,
+    qos1: false,
+    retained: false,
+    lwt: false,
+    commands: false,
+    alarms: false,
+  };
+  state.traffic.forEach(updateConcepts);
   renderDeviceOptions();
   renderDevices();
   renderTraffic();
   updateStats();
+  renderMeta();
+  renderGuideMeta();
+  renderExercises();
+  renderTooltips();
+  renderConcepts();
+  setBrokerStatus(state.brokerStatus, state.brokerStatus === "connected");
 }
 
 function handleEvent(entry) {
@@ -106,8 +359,10 @@ function handleEvent(entry) {
   if (state.traffic.length > 200) {
     state.traffic.shift();
   }
+  updateConcepts(entry);
   renderTraffic();
   updateStats();
+  renderConcepts();
 }
 
 function handleDevices(devices) {
@@ -121,11 +376,11 @@ const wsUrl = `${location.protocol === "https:" ? "wss" : "ws"}://${location.hos
 const ws = new WebSocket(wsUrl);
 
 ws.addEventListener("open", () => {
-  setBrokerStatus("connecting", false);
+  setBrokerStatus("ws connected", false);
 });
 
 ws.addEventListener("close", () => {
-  setBrokerStatus("offline", false);
+  setBrokerStatus("ws disconnected", false);
 });
 
 ws.addEventListener("message", (event) => {
@@ -137,6 +392,7 @@ ws.addEventListener("message", (event) => {
   } else if (payload.type === "devices") {
     handleDevices(payload.devices);
   } else if (payload.type === "broker") {
+    state.brokerStatus = payload.status;
     setBrokerStatus(payload.status, payload.status === "connected");
   }
 });
@@ -153,3 +409,8 @@ commandForm.addEventListener("submit", (event) => {
   ws.send(JSON.stringify(payload));
   commandForm.reset();
 });
+
+setupFilters();
+setupCopyButtons();
+setupTabs();
+setupSubTabs();

@@ -21,65 +21,425 @@
     </header>
 
     <main>
-      <section class="panel summary">
-        <div>
-          <h2>Fleet Snapshot</h2>
-          <p>Devices online and last activity across the factory.</p>
-        </div>
-        <div class="stats">
-          <div>
-            <span class="label">Total Devices</span>
-            <span class="value" id="total-devices">0</span>
-          </div>
-          <div>
-            <span class="label">Online</span>
-            <span class="value" id="online-devices">0</span>
-          </div>
-          <div>
-            <span class="label">Recent Messages</span>
-            <span class="value" id="traffic-count">0</span>
-          </div>
-        </div>
-      </section>
+      <div class="tabs" role="tablist" aria-label="Project sections">
+        <button class="tab active" role="tab" aria-selected="true" data-tab="dashboard">Dashboard</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="guide">Guide</button>
+      </div>
 
-      <section class="panel">
-        <div class="panel-header">
-          <h2>Devices</h2>
-          <p>Retained state, current sensor values, and last alarm per machine.</p>
-        </div>
-        <div id="devices" class="device-grid"></div>
-      </section>
+      <div class="tab-panels">
+        <div class="tab-panel active" data-panel="dashboard">
+          <section class="panel summary">
+            <div>
+              <div class="section-title">
+                <h2>Fleet Snapshot</h2>
+                <span class="info" tabindex="0" data-tooltip="Counts use retained status messages from {base_topic}/status/# plus recent traffic.">i</span>
+              </div>
+              <p>Devices online and last activity across the factory.</p>
+            </div>
+            <div class="stats">
+              <div>
+                <span class="label">Total Devices</span>
+                <span class="value" id="total-devices">0</span>
+              </div>
+              <div>
+                <span class="label">Online</span>
+                <span class="value" id="online-devices">0</span>
+              </div>
+              <div>
+                <span class="label">Recent Messages</span>
+                <span class="value" id="traffic-count">0</span>
+              </div>
+            </div>
+          </section>
 
-      <section class="panel split">
-        <div>
-          <h2>Command Center</h2>
-          <p>Publish commands to devices (QoS 1) and observe responses.</p>
-          <form id="command-form">
-            <label>
-              Target Device
-              <select id="command-device"></select>
-            </label>
-            <label>
-              Command
-              <select id="command-type">
-                <option value="start">start</option>
-                <option value="stop">stop</option>
-                <option value="maintenance">maintenance</option>
-              </select>
-            </label>
-            <label>
-              Reason (optional)
-              <input id="command-reason" type="text" placeholder="Operator request" />
-            </label>
-            <button type="submit">Send Command</button>
-          </form>
+          <section class="panel split">
+            <div>
+              <div class="section-title">
+                <h2>Concepts In Play</h2>
+                <span class="info" tabindex="0" data-tooltip="Badges activate when matching traffic is observed on {base_topic}/#.">i</span>
+              </div>
+              <p>Badges light up as MQTT behaviors are observed in live traffic.</p>
+              <div id="concepts" class="concepts">
+                <span class="concept" data-concept="qos0">QoS 0 telemetry</span>
+                <span class="concept" data-concept="qos1">QoS 1 alarms</span>
+                <span class="concept" data-concept="retained">Retained state</span>
+                <span class="concept" data-concept="lwt">LWT status</span>
+                <span class="concept" data-concept="commands">Commands</span>
+                <span class="concept" data-concept="alarms">Alarms</span>
+              </div>
+              <div class="meta" id="broker-meta">Broker: --</div>
+            </div>
+            <div>
+              <div class="section-title">
+                <h2>Exercises</h2>
+                <span class="info" tabindex="0" data-tooltip="Copy these commands into a terminal in the project root while the sandbox is running.">i</span>
+              </div>
+              <p>Run these in a terminal to explore wildcards, retained messages, and ACLs.</p>
+              <div class="exercise-list">
+                <div class="exercise-card">
+                  <div class="exercise-title">Wildcard temperatures</div>
+                  <div class="exercise-desc">Subscribe to all temperature sensors (QoS 0).</div>
+                  <pre><code class="exercise-code" data-template="VF_BROKER_PORT={broker_port} python -m vfactory.cli sub --topic '{base_topic}/telemetry/+/temperature' --qos 0"></code></pre>
+                  <button class="copy-btn" data-copy>Copy</button>
+                </div>
+                <div class="exercise-card">
+                  <div class="exercise-title">Retained state</div>
+                  <div class="exercise-desc">Instantly receive retained state for all devices.</div>
+                  <pre><code class="exercise-code" data-template="VF_BROKER_PORT={broker_port} python -m vfactory.cli sub --topic '{base_topic}/state/#' --qos 1"></code></pre>
+                  <button class="copy-btn" data-copy>Copy</button>
+                </div>
+                <div class="exercise-card">
+                  <div class="exercise-title">ACL rejection</div>
+                  <div class="exercise-desc">Trigger an unauthorized publish/subscribe attempt.</div>
+                  <pre><code class="exercise-code" data-template="VF_BROKER_PORT={broker_port} python -m vfactory.bad_actor"></code></pre>
+                  <button class="copy-btn" data-copy>Copy</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header">
+              <div>
+                <div class="section-title">
+                  <h2>Devices</h2>
+                  <span class="info" tabindex="0" data-tooltip="Cards merge retained state/status with the most recent telemetry per sensor.">i</span>
+                </div>
+                <p>Retained state, current sensor values, and last alarm per machine.</p>
+              </div>
+            </div>
+            <div id="devices" class="device-grid"></div>
+          </section>
+
+          <section class="panel split">
+            <div>
+              <div class="section-title">
+                <h2>Command Center</h2>
+                <span class="info" tabindex="0" data-tooltip="Publishes QoS 1 commands to {base_topic}/commands/dashboard/<device>.">i</span>
+              </div>
+              <p>Publish commands to devices (QoS 1) and observe responses.</p>
+              <form id="command-form">
+                <label>
+                  Target Device
+                  <select id="command-device"></select>
+                </label>
+                <label>
+                  Command
+                  <select id="command-type">
+                    <option value="start">start</option>
+                    <option value="stop">stop</option>
+                    <option value="maintenance">maintenance</option>
+                  </select>
+                </label>
+                <label>
+                  Reason (optional)
+                  <input id="command-reason" type="text" placeholder="Operator request" />
+                </label>
+                <div class="command-meta">Publisher: dashboard (QoS 1, retain=false)</div>
+                <button type="submit">Send Command</button>
+              </form>
+            </div>
+            <div>
+              <div class="section-title">
+                <h2>Live MQTT Traffic</h2>
+                <span class="info" tabindex="0" data-tooltip="Real-time view of {base_topic}/# with QoS and retain flags. Use filters below to focus.">i</span>
+              </div>
+              <p>Observability feed of topic, QoS, retain flag, and payload.</p>
+              <div class="filters">
+                <label>
+                  Category
+                  <select id="filter-category">
+                    <option value="all">all</option>
+                    <option value="telemetry">telemetry</option>
+                    <option value="alarms">alarms</option>
+                    <option value="commands">commands</option>
+                    <option value="state">state</option>
+                    <option value="status">status</option>
+                  </select>
+                </label>
+                <label>
+                  QoS
+                  <select id="filter-qos">
+                    <option value="any">any</option>
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                  </select>
+                </label>
+                <label>
+                  Retain
+                  <select id="filter-retain">
+                    <option value="any">any</option>
+                    <option value="retained">retained</option>
+                    <option value="live">live</option>
+                  </select>
+                </label>
+                <label>
+                  Topic contains
+                  <input id="filter-text" type="text" placeholder="telemetry/press" />
+                </label>
+              </div>
+              <div id="traffic" class="traffic"></div>
+            </div>
+          </section>
         </div>
-        <div>
-          <h2>Live MQTT Traffic</h2>
-          <p>Observability feed of topic, QoS, retain flag, and payload.</p>
-          <div id="traffic" class="traffic"></div>
+
+        <div class="tab-panel" data-panel="guide">
+          <div class="subtabs" role="tablist" aria-label="Guide sections" data-tab-group="guide">
+            <button class="subtab active" role="tab" aria-selected="true" data-subtab="guide-basics">Quickstart</button>
+            <button class="subtab" role="tab" aria-selected="false" data-subtab="guide-mqtt">MQTT Flow</button>
+          </div>
+
+          <div class="subtab-panels" data-tab-group="guide">
+            <div class="subtab-panel active" role="tabpanel" data-subpanel="guide-basics">
+              <section class="panel">
+                <h2>Requirements & Setup</h2>
+                <p>The MQTT broker runs in a Docker container. Start it with the scripts below.</p>
+                <ul class="guide-steps">
+                  <li>Open a terminal in the project root (this folder).</li>
+                  <li>Ensure Docker is running (Docker Desktop or equivalent).</li>
+                  <li>Install Python deps once, then start the sandbox.</li>
+                </ul>
+                <div class="exercise-list">
+                  <div class="exercise-card">
+                    <div class="exercise-title">Install dependencies</div>
+                    <div class="exercise-desc">Creates .venv and installs Python packages.</div>
+                    <pre><code class="exercise-code" data-template="./scripts/bootstrap.sh"></code></pre>
+                    <button class="copy-btn" data-copy>Copy</button>
+                  </div>
+                  <div class="exercise-card">
+                    <div class="exercise-title">Start the sandbox</div>
+                    <div class="exercise-desc">Starts Mosquitto via Docker and launches all sims.</div>
+                    <pre><code class="exercise-code" data-template="./scripts/start.sh"></code></pre>
+                    <button class="copy-btn" data-copy>Copy</button>
+                  </div>
+                  <div class="exercise-card">
+                    <div class="exercise-title">Stop everything</div>
+                    <div class="exercise-desc">Stops simulations and the broker container.</div>
+                    <pre><code class="exercise-code" data-template="./scripts/stop.sh"></code></pre>
+                    <button class="copy-btn" data-copy>Copy</button>
+                  </div>
+                </div>
+              </section>
+
+              <section class="panel">
+                <h2>Start Here</h2>
+                <p>This sandbox is meant to be poked, restarted, and stressed. Run the hands-on commands in a second terminal while the stack is running.</p>
+                <ol class="guide-steps">
+                  <li>Open the Dashboard tab and watch devices come online.</li>
+                  <li>Run one hands-on command and note QoS/retain flags in traffic.</li>
+                  <li>Trigger a fault or ACL error and observe the broker response.</li>
+                  <li>Restart components to see retained state and session behavior.</li>
+                </ol>
+              </section>
+
+              <section class="panel split">
+                <div>
+                  <h2>Terminology</h2>
+                  <div class="term-list">
+                    <div class="term-row">
+                      <div class="term-header">
+                        <span class="term">Topic hierarchy</span>
+                        <span class="info" tabindex="0" data-tooltip="Topics use a tree like {base_topic}/telemetry/conveyor/temperature so you can filter by device or sensor.">i</span>
+                      </div>
+                      <p>Watch how telemetry, alarms, commands, state, and status are separated.</p>
+                    </div>
+                    <div class="term-row">
+                      <div class="term-header">
+                        <span class="term">Wildcards</span>
+                        <span class="info" tabindex="0" data-tooltip="Use + for one level and # for all remaining levels, e.g. {base_topic}/telemetry/+/temperature.">i</span>
+                      </div>
+                      <p>Try broad subscriptions to learn filtering patterns.</p>
+                    </div>
+                    <div class="term-row">
+                      <div class="term-header">
+                        <span class="term">QoS 0 vs 1</span>
+                        <span class="info" tabindex="0" data-tooltip="QoS 0 is fire-and-forget. QoS 1 retries delivery until acknowledged.">i</span>
+                      </div>
+                      <p>Telemetry is QoS 0; alarms/commands/state are QoS 1.</p>
+                    </div>
+                    <div class="term-row">
+                      <div class="term-header">
+                        <span class="term">Retained</span>
+                        <span class="info" tabindex="0" data-tooltip="Retained messages are stored by the broker and sent to new subscribers immediately.">i</span>
+                      </div>
+                      <p>State and status topics are retained to show instant device presence.</p>
+                    </div>
+                    <div class="term-row">
+                      <div class="term-header">
+                        <span class="term">LWT</span>
+                        <span class="info" tabindex="0" data-tooltip="Last Will and Testament publishes an offline status when a client disconnects uncleanly.">i</span>
+                      </div>
+                      <p>Crash a device to watch its status flip to offline.</p>
+                    </div>
+                    <div class="term-row">
+                      <div class="term-header">
+                        <span class="term">Sessions + ACLs</span>
+                        <span class="info" tabindex="0" data-tooltip="Persistent sessions hold QoS 1 messages while clients are offline. ACLs restrict which clients can publish/subscribe.">i</span>
+                      </div>
+                      <p>Restart the controller to see queued alarms and run the bad actor.</p>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <h2>Hands-on Paths</h2>
+                  <p class="meta">Run these from a terminal in the project root while the sandbox is running.</p>
+                  <div class="exercise-list">
+                    <div class="exercise-card">
+                      <div class="exercise-title">Observe everything</div>
+                      <div class="exercise-desc">Subscribe to all topics and inspect QoS/retain flags.</div>
+                      <pre><code class="exercise-code" data-template="VF_BROKER_PORT={broker_port} python -m vfactory.cli sub --topic '{base_topic}/#' --qos 1"></code></pre>
+                      <button class="copy-btn" data-copy>Copy</button>
+                    </div>
+                    <div class="exercise-card">
+                      <div class="exercise-title">Trigger LWT</div>
+                      <div class="exercise-desc">Crash the press to publish an offline status automatically.</div>
+                      <pre><code class="exercise-code" data-template="VF_BROKER_PORT={broker_port} python -m vfactory.device --device press --crash-after 10"></code></pre>
+                      <button class="copy-btn" data-copy>Copy</button>
+                    </div>
+                    <div class="exercise-card">
+                      <div class="exercise-title">Persistent controller</div>
+                      <div class="exercise-desc">Restart the controller and watch queued QoS 1 alarms arrive.</div>
+                      <pre><code class="exercise-code" data-template="VF_BROKER_PORT={broker_port} python -m vfactory.controller --session persistent"></code></pre>
+                      <button class="copy-btn" data-copy>Copy</button>
+                    </div>
+                  </div>
+                  <div class="meta guide-meta" data-template="Broker defaults to port {broker_port}. Base topic is {base_topic}.">Broker defaults to port {broker_port}. Base topic is {base_topic}.</div>
+                </div>
+              </section>
+            </div>
+
+            <div class="subtab-panel" role="tabpanel" data-subpanel="guide-mqtt">
+              <section class="panel mqtt-explainer">
+                <div class="panel-header">
+                  <div>
+                    <h2>MQTT In Motion</h2>
+                    <p>Devices publish telemetry, alarms, state, and status into the broker. The broker fans out those topics to the dashboard, controller, and any observer while caching retained state for instant onboarding.</p>
+                  </div>
+                </div>
+                <div class="mqtt-layout">
+                  <div class="mqtt-notes">
+                    <div class="note-card">
+                      <div class="note-title">Publish</div>
+                      <p class="note-text">Devices stream telemetry (QoS 0) and alarms (QoS 1) into topic lanes like <code>telemetry/{device}/{sensor}</code> and <code>alarms/{device}/{sensor}</code>.</p>
+                    </div>
+                    <div class="note-card">
+                      <div class="note-title">Retain + LWT</div>
+                      <p class="note-text">State and status are retained by the broker; LWT flips a status offline when a client disappears uncleanly.</p>
+                    </div>
+                    <div class="note-card">
+                      <div class="note-title">Fan-out</div>
+                      <p class="note-text">Controller and dashboard subscribe broadly, so the broker can replay retained state and deliver new alarms instantly.</p>
+                    </div>
+                    <div class="note-card">
+                      <div class="note-title">Commands</div>
+                      <p class="note-text">Dashboard + controller publish commands (QoS 1) to <code>commands/{sender}/{device}</code>, and devices respond on state/status.</p>
+                    </div>
+                    <div class="legend">
+                      <div class="legend-item telemetry" style="--pulse-delay: 0s;">
+                        <span class="legend-line"></span>
+                        <div>
+                          <div class="legend-title">Telemetry</div>
+                          <div class="legend-desc">QoS 0 sensor readings.</div>
+                        </div>
+                      </div>
+                      <div class="legend-item alarms" style="--pulse-delay: 0.6s;">
+                        <span class="legend-line"></span>
+                        <div>
+                          <div class="legend-title">Alarms</div>
+                          <div class="legend-desc">QoS 1 fault signals.</div>
+                        </div>
+                      </div>
+                      <div class="legend-item commands" style="--pulse-delay: 1.2s;">
+                        <span class="legend-line"></span>
+                        <div>
+                          <div class="legend-title">Commands</div>
+                          <div class="legend-desc">QoS 1 control path.</div>
+                        </div>
+                      </div>
+                      <div class="legend-item retained" style="--pulse-delay: 1.8s;">
+                        <span class="legend-line"></span>
+                        <div>
+                          <div class="legend-title">Retained + Status</div>
+                          <div class="legend-desc">Cached state + LWT.</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="mqtt-visual">
+                    <svg class="mqtt-diagram" viewBox="0 0 700 360" role="img" aria-label="Animated diagram of MQTT flow between devices, broker, dashboard, controller, and observers.">
+                      <defs>
+                        <marker id="arrow-telemetry" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                          <path d="M0,0 L0,6 L6,3 Z" fill="#9dff00"></path>
+                        </marker>
+                        <marker id="arrow-alarms" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                          <path d="M0,0 L0,6 L6,3 Z" fill="#ff4d3f"></path>
+                        </marker>
+                        <marker id="arrow-commands" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                          <path d="M0,0 L0,6 L6,3 Z" fill="#ff7a18"></path>
+                        </marker>
+                        <marker id="arrow-retained" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                          <path d="M0,0 L0,6 L6,3 Z" fill="#58c7c1"></path>
+                        </marker>
+                        <marker id="arrow-stream" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                          <path d="M0,0 L0,6 L6,3 Z" fill="#9aa7b6"></path>
+                        </marker>
+                      </defs>
+
+                      <rect class="node device-node" x="30" y="140" width="150" height="80" rx="14"></rect>
+                      <text class="node-title" x="105" y="172" text-anchor="middle">Device Fleet</text>
+                      <text class="node-sub" x="105" y="194" text-anchor="middle">Sensors + LWT</text>
+
+                      <rect class="node broker-node" x="245" y="125" width="150" height="110" rx="16"></rect>
+                      <text class="node-title" x="320" y="165" text-anchor="middle">MQTT Broker</text>
+                      <rect class="cache-node" x="272" y="184" width="96" height="26" rx="10"></rect>
+                      <text class="node-sub cache-label" x="320" y="202" text-anchor="middle">retained</text>
+
+                      <rect class="node dashboard-node" x="520" y="40" width="160" height="70" rx="14"></rect>
+                      <text class="node-title" x="600" y="72" text-anchor="middle">Dashboard</text>
+                      <text class="node-sub" x="600" y="92" text-anchor="middle">WebSocket feed</text>
+
+                      <rect class="node controller-node" x="520" y="250" width="160" height="70" rx="14"></rect>
+                      <text class="node-title" x="600" y="282" text-anchor="middle">Controller</text>
+                      <text class="node-sub" x="600" y="302" text-anchor="middle">Rules + actions</text>
+
+                      <rect class="node observer-node" x="70" y="260" width="150" height="70" rx="14"></rect>
+                      <text class="node-title" x="145" y="292" text-anchor="middle">Observer</text>
+                      <text class="node-sub" x="145" y="312" text-anchor="middle">CLI / test sub</text>
+
+                      <path class="flow-path telemetry" d="M180 165 L237 165" marker-end="url(#arrow-telemetry)"></path>
+                      <path class="flow-path alarms" d="M180 200 L237 200" marker-end="url(#arrow-alarms)"></path>
+                      <path class="flow-path stream" d="M395 160 L450 160 L450 75 L512 75" marker-end="url(#arrow-stream)"></path>
+                      <path class="flow-path stream" d="M395 210 L450 210 L450 285 L512 285" marker-end="url(#arrow-stream)"></path>
+                      <path class="flow-path commands" d="M520 95 L470 95 L470 125 L403 125" marker-end="url(#arrow-commands)"></path>
+                      <path class="flow-path retained" d="M270 235 L270 295 L220 295" marker-end="url(#arrow-retained)"></path>
+
+                      <circle class="flow-pulse telemetry" r="4">
+                        <animateMotion dur="2.8s" repeatCount="indefinite" path="M180 165 L237 165"></animateMotion>
+                      </circle>
+                      <circle class="flow-pulse alarms" r="4">
+                        <animateMotion dur="3.4s" repeatCount="indefinite" path="M180 200 L237 200" begin="0.6s"></animateMotion>
+                      </circle>
+                      <circle class="flow-pulse stream" r="4">
+                        <animateMotion dur="4.2s" repeatCount="indefinite" path="M395 160 L450 160 L450 75 L512 75" begin="1s"></animateMotion>
+                      </circle>
+                      <circle class="flow-pulse stream" r="4">
+                        <animateMotion dur="4.6s" repeatCount="indefinite" path="M395 210 L450 210 L450 285 L512 285" begin="1.4s"></animateMotion>
+                      </circle>
+                      <circle class="flow-pulse commands" r="4">
+                        <animateMotion dur="3s" repeatCount="indefinite" path="M520 95 L470 95 L470 125 L403 125" begin="0.4s"></animateMotion>
+                      </circle>
+                      <circle class="flow-pulse retained" r="4">
+                        <animateMotion dur="4.8s" repeatCount="indefinite" path="M270 235 L270 295 L220 295" begin="2s"></animateMotion>
+                      </circle>
+                    </svg>
+                    <p class="diagram-caption">Animated pulses show how messages move through the broker, while retained state stays cached until a new subscriber appears.</p>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </div>
         </div>
-      </section>
+      </div>
     </main>
 
     <script src="/static/app.js"></script>
