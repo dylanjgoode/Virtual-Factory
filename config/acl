@@ -1,0 +1,17 @@
+# Default deny. Explicit read/write rules only.
+
+# Read access for the core factory topics.
+topic read factory/telemetry/#
+topic read factory/alarms/#
+topic read factory/state/#
+topic read factory/status/#
+topic read factory/commands/#
+
+# Devices (clientid = device id) can only publish their own data.
+pattern write factory/telemetry/%c/#
+pattern write factory/alarms/%c/#
+pattern write factory/state/%c
+pattern write factory/status/%c
+
+# Command publishers can only publish under their own clientid prefix.
+pattern write factory/commands/%c/#

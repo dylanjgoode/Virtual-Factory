@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Virtual Factory MQTT Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <div class="bg-glow"></div>
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Virtual Factory Sandbox</p>
+        <h1>MQTT Operations Console</h1>
+        <p class="subtitle">Live telemetry, alarms, and command control over a simulated factory floor.</p>
+      </div>
+      <div class="status-pill" id="broker-status">
+        <span class="dot"></span>
+        <span>Broker: waiting</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel summary">
+        <div>
+          <h2>Fleet Snapshot</h2>
+          <p>Devices online and last activity across the factory.</p>
+        </div>
+        <div class="stats">
+          <div>
+            <span class="label">Total Devices</span>
+            <span class="value" id="total-devices">0</span>
+          </div>
+          <div>
+            <span class="label">Online</span>
+            <span class="value" id="online-devices">0</span>
+          </div>
+          <div>
+            <span class="label">Recent Messages</span>
+            <span class="value" id="traffic-count">0</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Devices</h2>
+          <p>Retained state, current sensor values, and last alarm per machine.</p>
+        </div>
+        <div id="devices" class="device-grid"></div>
+      </section>
+
+      <section class="panel split">
+        <div>
+          <h2>Command Center</h2>
+          <p>Publish commands to devices (QoS 1) and observe responses.</p>
+          <form id="command-form">
+            <label>
+              Target Device
+              <select id="command-device"></select>
+            </label>
+            <label>
+              Command
+              <select id="command-type">
+                <option value="start">start</option>
+                <option value="stop">stop</option>
+                <option value="maintenance">maintenance</option>
+              </select>
+            </label>
+            <label>
+              Reason (optional)
+              <input id="command-reason" type="text" placeholder="Operator request" />
+            </label>
+            <button type="submit">Send Command</button>
+          </form>
+        </div>
+        <div>
+          <h2>Live MQTT Traffic</h2>
+          <p>Observability feed of topic, QoS, retain flag, and payload.</p>
+          <div id="traffic" class="traffic"></div>
+        </div>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
