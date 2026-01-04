@@ -29,6 +29,8 @@ const brokerStatusEl = document.getElementById("broker-status");
 const conceptsEl = document.getElementById("concepts");
 const brokerMetaEl = document.getElementById("broker-meta");
 const guideMetaEl = document.querySelector(".guide-meta");
+const globalTooltipEl = document.getElementById("global-tooltip");
+const commandStatusEl = document.getElementById("command-status");
 const filterCategoryEl = document.getElementById("filter-category");
 const filterQosEl = document.getElementById("filter-qos");
 const filterRetainEl = document.getElementById("filter-retain");
@@ -141,7 +143,11 @@ function renderTooltips() {
     if (!template) {
       return;
     }
-    el.setAttribute("data-tooltip", replaceTemplate(template));
+    const text = replaceTemplate(template);
+    el.setAttribute("data-tooltip", text);
+    if (el.classList.contains("info")) {
+      el.setAttribute("aria-label", text);
+    }
   });
 }
 
@@ -395,6 +401,106 @@ function setupDiagramTooltips() {
   );
 }
 
+function setupInfoTooltips() {
+  if (!globalTooltipEl) {
+    return;
+  }
+  const infoEls = Array.from(document.querySelectorAll(".info[data-tooltip]"));
+  if (infoEls.length === 0) {
+    return;
+  }
+  let activeEl = null;
+
+  const positionTooltip = (el) => {
+    const rect = el.getBoundingClientRect();
+    const tooltipRect = globalTooltipEl.getBoundingClientRect();
+    let left = rect.left + rect.width / 2 - tooltipRect.width / 2;
+    let top = rect.top - tooltipRect.height - 12;
+    let placement = "top";
+    if (top < 8) {
+      top = rect.bottom + 12;
+      placement = "bottom";
+    }
+    if (left < 8) {
+      left = 8;
+    }
+    if (left + tooltipRect.width > window.innerWidth - 8) {
+      left = window.innerWidth - tooltipRect.width - 8;
+    }
+    globalTooltipEl.style.left = `${left}px`;
+    globalTooltipEl.style.top = `${top}px`;
+    globalTooltipEl.setAttribute("data-placement", placement);
+  };
+
+  const showTooltip = (el) => {
+    const text = el.getAttribute("data-tooltip");
+    if (!text) {
+      return;
+    }
+    globalTooltipEl.textContent = text;
+    globalTooltipEl.classList.add("active");
+    globalTooltipEl.setAttribute("aria-hidden", "false");
+    el.setAttribute("aria-describedby", "global-tooltip");
+    el.setAttribute("aria-expanded", "true");
+    positionTooltip(el);
+    activeEl = el;
+  };
+
+  const hideTooltip = () => {
+    globalTooltipEl.classList.remove("active");
+    globalTooltipEl.setAttribute("aria-hidden", "true");
+    if (activeEl) {
+      activeEl.setAttribute("aria-expanded", "false");
+    }
+    activeEl = null;
+  };
+
+  infoEls.forEach((el) => {
+    el.addEventListener("pointerenter", () => showTooltip(el));
+    el.addEventListener("pointerleave", () => {
+      if (activeEl === el) {
+        hideTooltip();
+      }
+    });
+    el.addEventListener("focus", () => showTooltip(el));
+    el.addEventListener("blur", hideTooltip);
+    el.addEventListener("pointerdown", (event) => {
+      if (event.pointerType === "touch") {
+        event.preventDefault();
+        showTooltip(el);
+      }
+    });
+    el.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        hideTooltip();
+        el.blur();
+      }
+    });
+  });
+
+  document.addEventListener("pointerdown", (event) => {
+    if (activeEl && !event.target.closest(".info")) {
+      hideTooltip();
+    }
+  });
+
+  window.addEventListener("resize", () => {
+    if (activeEl) {
+      positionTooltip(activeEl);
+    }
+  });
+
+  window.addEventListener(
+    "scroll",
+    () => {
+      if (activeEl) {
+        positionTooltip(activeEl);
+      }
+    },
+    true
+  );
+}
+
 function renderDeviceOptions() {
   commandDeviceEl.innerHTML = "";
   Object.keys(state.devices).forEach((deviceId) => {
@@ -403,6 +509,7 @@ function renderDeviceOptions() {
     option.textContent = deviceId;
     commandDeviceEl.appendChild(option);
   });
+  setCommandAvailability();
 }
 
 function renderDevices() {
@@ -507,6 +614,28 @@ function handleDevices(devices) {
   updateStats();
 }
 
+function setCommandAvailability() {
+  const hasDevices = Object.keys(state.devices).length > 0;
+  if (commandDeviceEl) {
+    commandDeviceEl.disabled = !hasDevices;
+  }
+  if (commandForm) {
+    const submitButton = commandForm.querySelector("button[type='submit']");
+    if (submitButton) {
+      submitButton.disabled = !hasDevices;
+    }
+  }
+  if (commandStatusEl) {
+    if (hasDevices) {
+      commandStatusEl.textContent = "";
+      commandStatusEl.classList.remove("active");
+    } else {
+      commandStatusEl.textContent = "Waiting for devices... Start the sandbox to load device list.";
+      commandStatusEl.classList.add("active");
+    }
+  }
+}
+
 const wsUrl = `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws`;
 const ws = new WebSocket(wsUrl);
 
@@ -535,6 +664,13 @@ ws.addEventListener("message", (event) => {
 const commandForm = document.getElementById("command-form");
 commandForm.addEventListener("submit", (event) => {
   event.preventDefault();
+  if (!commandDeviceEl.value) {
+    if (commandStatusEl) {
+      commandStatusEl.textContent = "No devices available to receive commands yet.";
+      commandStatusEl.classList.add("active");
+    }
+    return;
+  }
   const payload = {
     type: "command",
     device_id: commandDeviceEl.value,
@@ -550,3 +686,5 @@ setupCopyButtons();
 setupTabs();
 setupSubTabs();
 setupDiagramTooltips();
+setupInfoTooltips();
+setCommandAvailability();

@@ -98,6 +98,52 @@
             </div>
           </section>
 
+          <section class="panel glossary">
+            <div class="section-title">
+              <h2>MQTT Glossary</h2>
+              <span class="info" tabindex="0" data-tooltip="Plain-language definitions for the terms you will see in telemetry, alarms, and commands.">i</span>
+            </div>
+            <p>Quick reference for the core MQTT concepts used in this dashboard.</p>
+            <div class="term-list glossary-list">
+              <div class="term-row">
+                <div class="term-header">
+                  <span class="term">Topic</span>
+                </div>
+                <p>A text path that labels a message, like <code>factory/telemetry/press/temperature</code>.</p>
+              </div>
+              <div class="term-row">
+                <div class="term-header">
+                  <span class="term">Wildcards</span>
+                </div>
+                <p>Use <code>+</code> for one level and <code>#</code> for all remaining levels in a subscription.</p>
+              </div>
+              <div class="term-row">
+                <div class="term-header">
+                  <span class="term">QoS</span>
+                </div>
+                <p>Quality of Service. QoS 0 is best-effort, QoS 1 retries until acknowledged.</p>
+              </div>
+              <div class="term-row">
+                <div class="term-header">
+                  <span class="term">Retained</span>
+                </div>
+                <p>Retained messages are stored by the broker and replayed to new subscribers.</p>
+              </div>
+              <div class="term-row">
+                <div class="term-header">
+                  <span class="term">LWT</span>
+                </div>
+                <p>Last Will and Testament. A broker-published offline status when a client dies.</p>
+              </div>
+              <div class="term-row">
+                <div class="term-header">
+                  <span class="term">Sessions + ACLs</span>
+                </div>
+                <p>Persistent sessions queue QoS 1 messages. ACLs restrict who can publish/subscribe.</p>
+              </div>
+            </div>
+          </section>
+
           <section class="panel">
             <div class="panel-header">
               <div>
@@ -136,6 +182,7 @@
                   <input id="command-reason" type="text" placeholder="Operator request" />
                 </label>
                 <div class="command-meta">Publisher: dashboard (QoS 1, retain=false)</div>
+                <div class="command-status" id="command-status" role="status" aria-live="polite"></div>
                 <button type="submit">Send Command</button>
               </form>
             </div>
@@ -460,6 +507,8 @@
         </div>
       </div>
     </main>
+
+    <div class="tooltip-floating" id="global-tooltip" role="tooltip" aria-hidden="true"></div>
 
     <script src="/static/app.js"></script>
   </body>

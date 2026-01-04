@@ -302,6 +302,10 @@ code {
   margin-top: 16px;
 }
 
+.glossary-list {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
 .term-row {
   background: #0f161f;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -606,12 +610,12 @@ code {
 }
 
 .info {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   border-radius: var(--radius-xs);
   border: 1px solid rgba(157, 255, 0, 0.6);
   color: var(--accent-2);
-  font-size: 11px;
+  font-size: 12px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -620,29 +624,34 @@ code {
   z-index: 3;
 }
 
-.info::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  left: 50%;
-  bottom: 140%;
-  transform: translateX(-50%) translateY(8px);
-  width: 240px;
+.info:focus-visible {
+  outline: 2px solid var(--accent-2);
+  outline-offset: 2px;
+}
+
+.tooltip-floating {
+  position: fixed;
+  left: 0;
+  top: 0;
+  max-width: 260px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
   background: #0b1016;
   border: 1px solid var(--card-border);
   color: var(--text);
-  font-size: 11px;
-  padding: 8px 10px;
-  border-radius: var(--radius-sm);
+  font-size: 12px;
+  line-height: 1.4;
   opacity: 0;
-  pointer-events: none;
+  transform: translateY(6px);
   transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
   z-index: 9999;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.45);
 }
 
-.info:hover::after,
-.info:focus::after {
+.tooltip-floating.active {
   opacity: 1;
-  transform: translateX(-50%) translateY(0);
+  transform: translateY(0);
 }
 
 .device-grid {
@@ -748,6 +757,29 @@ button {
 button:hover {
   transform: translateY(-2px);
   box-shadow: 0 10px 20px rgba(255, 122, 24, 0.3);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+select:disabled,
+input:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.command-status {
+  min-height: 16px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.command-status.active {
+  color: var(--accent-2);
 }
 
 .exercise-list {
