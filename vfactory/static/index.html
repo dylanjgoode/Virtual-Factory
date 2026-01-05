@@ -24,6 +24,7 @@
       <div class="tabs" role="tablist" aria-label="Project sections">
         <button class="tab active" role="tab" id="tab-dashboard" aria-selected="true" aria-controls="panel-dashboard" tabindex="0" data-tab="dashboard">Dashboard</button>
         <button class="tab" role="tab" id="tab-guide" aria-selected="false" aria-controls="panel-guide" tabindex="-1" data-tab="guide">Guide</button>
+        <button class="tab" role="tab" id="tab-tour" aria-selected="false" aria-controls="panel-tour" tabindex="-1" data-tab="tour">Factory Tour</button>
       </div>
 
       <div class="tab-panels">
@@ -504,6 +505,172 @@
               </section>
             </div>
           </div>
+        </div>
+
+        <div class="tab-panel" role="tabpanel" id="panel-tour" aria-labelledby="tab-tour" data-panel="tour">
+          <section class="panel tour-hero">
+            <div class="tour-hero-grid">
+              <div class="tour-story">
+                <p class="eyebrow">Story Time</p>
+                <h2>Welcome to the Factory Floor</h2>
+                <p>You are the operator. Each machine is a character with sensors that speak in telemetry. MQTT is the message highway that lets you observe the floor, spot issues early, and send the right command at the right time.</p>
+                <div class="story-steps">
+                  <div class="story-step">
+                    <span class="step-number">1</span>
+                    <div>
+                      <h3>Sense</h3>
+                      <p>Machines read temperature, vibration, pressure, current, and air quality.</p>
+                    </div>
+                  </div>
+                  <div class="story-step">
+                    <span class="step-number">2</span>
+                    <div>
+                      <h3>Publish</h3>
+                      <p>Telemetry streams out on <code>telemetry/{device}/{sensor}</code> topics with QoS 0.</p>
+                    </div>
+                  </div>
+                  <div class="story-step">
+                    <span class="step-number">3</span>
+                    <div>
+                      <h3>Route + Remember</h3>
+                      <p>The broker enforces QoS, stores retained state, and publishes LWT if a machine drops.</p>
+                    </div>
+                  </div>
+                  <div class="story-step">
+                    <span class="step-number">4</span>
+                    <div>
+                      <h3>Observe</h3>
+                      <p>The dashboard and controller subscribe broadly to turn messages into insight.</p>
+                    </div>
+                  </div>
+                  <div class="story-step">
+                    <span class="step-number">5</span>
+                    <div>
+                      <h3>Act</h3>
+                      <p>You send start/stop/maintenance commands and watch state updates land.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="tour-cast">
+                <div class="tour-cast-heading">
+                  <h3>Cast of Characters</h3>
+                  <p>Everyone you will bump into while learning MQTT.</p>
+                </div>
+                <div class="tour-cast-card">
+                  <span class="tour-cast-label">You</span>
+                  <div class="tour-cast-title">Operator</div>
+                  <p>Watch the dashboard, investigate alarms, and decide the next action.</p>
+                </div>
+                <div class="tour-cast-card">
+                  <span class="tour-cast-label">Hub</span>
+                  <div class="tour-cast-title">MQTT Broker</div>
+                  <p>Routes topics, enforces QoS, and remembers retained state for new subscribers.</p>
+                </div>
+                <div class="tour-cast-card">
+                  <span class="tour-cast-label">Brains</span>
+                  <div class="tour-cast-title">Dashboard + Controller</div>
+                  <p>Turn raw telemetry into visuals and automated rules.</p>
+                </div>
+                <div class="tour-cast-card">
+                  <span class="tour-cast-label">Scout</span>
+                  <div class="tour-cast-title">Observer</div>
+                  <p>CLI subscribers that help you test wildcards and QoS behavior.</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header">
+              <div>
+                <h2>Meet the Machines</h2>
+                <p>These cards mirror the live device cards in the Dashboard so the floor feels familiar.</p>
+              </div>
+            </div>
+            <div class="tour-machine-grid">
+              <div class="device-card tour-machine">
+                <div class="tour-machine-head">
+                  <h3>press</h3>
+                  <span class="tour-machine-tag">Stamping press</span>
+                </div>
+                <div class="device-meta">press | state: running | status: online</div>
+                <div class="sensor-list">
+                  <div class="sensor-item"><span>pressure</span><span>120 bar</span></div>
+                  <div class="sensor-item"><span>temperature</span><span>55 C</span></div>
+                  <div class="sensor-item"><span>vibration</span><span>2.4 mm/s</span></div>
+                </div>
+                <div class="tour-machine-note">High-force forming machine. Pressure spikes trigger alarms.</div>
+              </div>
+              <div class="device-card tour-machine">
+                <div class="tour-machine-head">
+                  <h3>robot_arm</h3>
+                  <span class="tour-machine-tag">Assembly arm</span>
+                </div>
+                <div class="device-meta">robot_arm | state: calibrating | status: online</div>
+                <div class="sensor-list">
+                  <div class="sensor-item"><span>temperature</span><span>48 C</span></div>
+                  <div class="sensor-item"><span>vibration</span><span>1.6 mm/s</span></div>
+                  <div class="sensor-item"><span>current</span><span>12.0 A</span></div>
+                  <div class="sensor-item"><span>torque</span><span>35 Nm</span></div>
+                </div>
+                <div class="tour-machine-note">Precision assembly; torque drift signals wear.</div>
+              </div>
+              <div class="device-card tour-machine">
+                <div class="tour-machine-head">
+                  <h3>conveyor</h3>
+                  <span class="tour-machine-tag">Material flow</span>
+                </div>
+                <div class="device-meta">conveyor | state: moving | status: online</div>
+                <div class="sensor-list">
+                  <div class="sensor-item"><span>temperature</span><span>42 C</span></div>
+                  <div class="sensor-item"><span>vibration</span><span>2.1 mm/s</span></div>
+                  <div class="sensor-item"><span>current</span><span>9.5 A</span></div>
+                </div>
+                <div class="tour-machine-note">Moves material between stations. Current spikes mean overload.</div>
+              </div>
+              <div class="device-card tour-machine">
+                <div class="tour-machine-head">
+                  <h3>env_station</h3>
+                  <span class="tour-machine-tag">Ambient station</span>
+                </div>
+                <div class="device-meta">env_station | state: monitoring | status: online</div>
+                <div class="sensor-list">
+                  <div class="sensor-item"><span>ambient_temp</span><span>23 C</span></div>
+                  <div class="sensor-item"><span>humidity</span><span>45 %</span></div>
+                  <div class="sensor-item"><span>air_quality</span><span>35 AQI</span></div>
+                  <div class="sensor-item"><span>noise</span><span>58 dB</span></div>
+                </div>
+                <div class="tour-machine-note">Background context. Keeps the floor safe and compliant.</div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel split">
+            <div>
+              <h2>Why instrument telemetry</h2>
+              <ul class="tour-points">
+                <li>Detect drift before it becomes downtime.</li>
+                <li>Correlate alarms with the data that caused them.</li>
+                <li>Track performance so you can tune the line.</li>
+                <li>Build trust with a clear record of what happened.</li>
+              </ul>
+              <div class="meta">Telemetry shows what is happening now; retained state shows what should be true for new subscribers.</div>
+            </div>
+            <div>
+              <h2>Why MQTT here</h2>
+              <ul class="tour-points">
+                <li>Publish/subscribe keeps machines and tools loosely coupled.</li>
+                <li>QoS 0 for fast telemetry, QoS 1 for critical alarms and commands.</li>
+                <li>Retained messages give instant context when you connect.</li>
+                <li>Last Will makes device presence automatic.</li>
+              </ul>
+              <div class="tour-topic">
+                <span class="tour-topic-label">Example topic</span>
+                <code class="exercise-code" data-template="{base_topic}/telemetry/press/temperature"></code>
+              </div>
+            </div>
+          </section>
         </div>
       </div>
     </main>
